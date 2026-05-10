@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-green: #7BF28F;
+  --color-green-deep: #3DC85B;
+  --color-black: #242424;
+  --color-gray: #F4F4F4;
+}
+
+html,
+body {
+  background: #FAFAFA;
+  color: var(--color-black);
+  font-feature-settings: "ss01", "ss02";
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Sélection texte aux couleurs Dolinnov */
+::selection {
+  background: var(--color-green);
+  color: var(--color-black);
+}
+
+/* Scrollbar discrète */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(36, 36, 36, 0.15);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(36, 36, 36, 0.3);
+}
+
+/* Composants utilitaires */
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-dolinnov-black text-dolinnov-green px-5 py-2.5 rounded-full font-medium text-sm hover:bg-dolinnov-black-soft transition-colors;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 bg-dolinnov-green text-dolinnov-black px-5 py-2.5 rounded-full font-medium text-sm hover:bg-dolinnov-green-deep transition-colors;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 text-dolinnov-black px-4 py-2 rounded-full font-medium text-sm hover:bg-dolinnov-gray transition-colors;
+  }
+  .card {
+    @apply bg-white rounded-2xl border border-black/5 shadow-card p-6 transition-shadow hover:shadow-card-hover;
+  }
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-xl border border-black/10 bg-white text-sm focus:outline-none focus:border-dolinnov-black focus:ring-2 focus:ring-dolinnov-green/40 transition;
+  }
+  .label-field {
+    @apply text-xs font-medium uppercase tracking-wider text-dolinnov-gray-mid mb-1.5 block;
+  }
+}
