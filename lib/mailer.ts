@@ -1,39 +1,29 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 /**
- * Client SMTP pour envoyer des emails depuis l'outil interne.
+ * Client email pour l'outil interne (Resend).
  *
- * Variables d'environnement requises :
- * - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM
- *
- * Recommandation : pour Gmail, utiliser un App Password
- * (https://myaccount.google.com/apppasswords) plutôt que le mot de passe principal.
+ * Variables d'environnement :
+ * - RESEND_API_KEY  (obligatoire) — clé API Resend, voir https://resend.com
+ * - RESEND_FROM     (optionnel)  — adresse expéditeur. Fallback "onboarding@resend.dev"
+ *                                  (utile tant que le domaine dolinnov.com n'est pas
+ *                                  vérifié dans le dashboard Resend).
  */
 
-let cachedTransporter: nodemailer.Transporter | null = null;
+let cachedClient: Resend | null = null;
 
-export function getMailer(): nodemailer.Transporter {
-  if (cachedTransporter) return cachedTransporter;
+function getClient(): Resend {
+  if (cachedClient) return cachedClient;
 
-  const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD } = process.env;
-
-  if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASSWORD) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
     throw new Error(
-      "Configuration SMTP incomplète : vérifier SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD"
+      "Configuration Resend incomplète : la variable RESEND_API_KEY est requise."
     );
   }
 
-  cachedTransporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    secure: Number(SMTP_PORT) === 465, // true pour 465, false pour 587
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASSWORD,
-    },
-  });
-
-  return cachedTransporter;
+  cachedClient = new Resend(apiKey);
+  return cachedClient;
 }
 
 export interface SendEmailParams {
@@ -46,11 +36,30 @@ export interface SendEmailParams {
   replyTo?: string;
 }
 
-export async function sendEmail(params: SendEmailParams) {
-  const mailer = getMailer();
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+export interface SendEmailResult {
+  messageId: string;
+  accepted: string[];
+  rejected: string[];
+}
 
-  const info = await mailer.sendMail({
+function toArray(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+export async function sendEmail(
+  params: SendEmailParams
+): Promise<SendEmailResult> {
+  const client = getClient();
+  const from = process.env.RESEND_FROM || "onboarding@resend.dev";
+
+  if (!params.text && !params.html) {
+    throw new Error("Email vide : fournir au moins un champ `text` ou `html`.");
+  }
+
+  const recipients = toArray(params.to);
+
+  const { data, error } = await client.emails.send({
     from,
     to: params.to,
     cc: params.cc,
@@ -59,11 +68,16 @@ export async function sendEmail(params: SendEmailParams) {
     subject: params.subject,
     text: params.text,
     html: params.html,
-  });
+  } as Parameters<typeof client.emails.send>[0]);
+
+  if (error || !data) {
+    const message = error?.message || "Erreur Resend inconnue";
+    throw new Error(`Échec d'envoi via Resend : ${message}`);
+  }
 
   return {
-    messageId: info.messageId,
-    accepted: info.accepted,
-    rejected: info.rejected,
+    messageId: data.id,
+    accepted: recipients,
+    rejected: [],
   };
 }

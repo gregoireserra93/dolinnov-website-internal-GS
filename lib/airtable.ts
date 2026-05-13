@@ -1,4 +1,4 @@
-import Airtable from "airtable";
+import Airtable, { FieldSet } from "airtable";
 
 /**
  * Client Airtable centralisé.
@@ -88,7 +88,7 @@ export async function updateContact(
   fields: Record<string, unknown>
 ): Promise<void> {
   const table = getContactsTable();
-  await table.update(id, fields);
+  await table.update(id, fields as Partial<FieldSet>);
 }
 
 export async function logInteraction(

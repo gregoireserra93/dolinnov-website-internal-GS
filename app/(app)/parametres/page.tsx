@@ -12,16 +12,22 @@ export default function ParametresPage() {
       ok: !!process.env.AIRTABLE_BASE_ID,
     },
     {
-      label: "SMTP Host",
-      ok: !!process.env.SMTP_HOST,
+      label: "Resend API Key",
+      ok: !!process.env.RESEND_API_KEY,
     },
     {
-      label: "SMTP User",
-      ok: !!process.env.SMTP_USER,
+      label: "Resend expéditeur (RESEND_FROM)",
+      ok: !!process.env.RESEND_FROM,
     },
     {
-      label: "SMTP Password",
-      ok: !!process.env.SMTP_PASSWORD,
+      label: "Mot de passe d'accès (APP_PASSWORD)",
+      ok: !!process.env.APP_PASSWORD,
+    },
+    {
+      label: "Clé de session (SESSION_SECRET)",
+      ok:
+        !!process.env.SESSION_SECRET &&
+        process.env.SESSION_SECRET.length >= 32,
     },
   ];
 

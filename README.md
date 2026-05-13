@@ -15,7 +15,7 @@ contacts investisseurs, veille concurrentielle, données scientifiques.
 - **Node.js 20+** ([télécharger ici](https://nodejs.org/))
 - Un éditeur (recommandé : **Cursor** ou **VS Code** avec Claude Code)
 - Un compte **Airtable** avec une base contenant tes contacts
-- Un compte email avec accès SMTP (Gmail = App Password)
+- Un compte **Resend** (gratuit jusqu'à 3000 emails/mois) pour l'envoi
 
 ### 2. Installation
 
@@ -58,11 +58,16 @@ Puis ouvre `.env.local` et remplis :
 | Notes | Long text |
 | Tags | Multiple select |
 
-#### b) SMTP (Gmail recommandé)
-1. Active la 2FA sur ton compte Google
-2. Va sur https://myaccount.google.com/apppasswords
-3. Crée un App Password "Dolinnov tool"
-4. Remplis les variables `SMTP_*` dans `.env.local`
+#### b) Email (Resend)
+
+Resend est conçu pour fonctionner depuis des environnements serverless type
+Vercel (contrairement à Gmail SMTP, instable dans ce contexte).
+
+1. Crée un compte gratuit sur https://resend.com/signup (3000 emails/mois inclus)
+2. Génère une **API key** dans le dashboard et colle-la dans `RESEND_API_KEY`
+3. **Recommandé** : vérifie le domaine `dolinnov.com` (Dashboard → Domains) pour
+   pouvoir expédier depuis `gregoire@dolinnov.com`. Tant que le domaine n'est
+   pas vérifié, garde `RESEND_FROM=onboarding@resend.dev` (sandbox Resend).
 
 ### 4. Lancement
 
@@ -136,7 +141,8 @@ dolinnov-app/
 │   └── Sidebar.tsx
 └── lib/
     ├── airtable.ts        # Client Airtable + helpers
-    └── mailer.ts          # SMTP nodemailer
+    ├── mailer.ts          # Client Resend
+    └── session.ts         # Sessions iron-session (auth)
 ```
 
 ---
@@ -162,9 +168,14 @@ Puis configure les variables d'environnement dans le dashboard Vercel.
 **"AIRTABLE_API_KEY et AIRTABLE_BASE_ID doivent être définis"**
 → Vérifie `.env.local` (pas `.env`) et redémarre `npm run dev`.
 
-**Gmail rejette le SMTP**
-→ Tu utilises ton mot de passe normal au lieu d'un App Password. Crée-en un :
-https://myaccount.google.com/apppasswords
+**Resend renvoie 401 / "API key invalid"**
+→ La clé `RESEND_API_KEY` est manquante ou incorrecte. Régénère-la depuis
+https://resend.com/api-keys et redémarre `npm run dev`.
+
+**Resend renvoie "domain not verified"**
+→ Tu essaies d'expédier depuis `gregoire@dolinnov.com` mais le domaine n'est
+pas vérifié. Soit tu vérifies le domaine dans Resend (Dashboard → Domains),
+soit tu repasses temporairement `RESEND_FROM=onboarding@resend.dev`.
 
 **Les contacts ne se chargent pas**
 → Va sur `/parametres` pour voir l'état des connexions.
